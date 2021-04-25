@@ -1,93 +1,89 @@
-#include <Servo.h>
-#include<LiquidCrystal.h>
+#include <Servo.h> 			// Servo Motor Library
+#include <LiquidCrystal.h> 		// LCD Library
 
-LiquidCrystal lcd(12,11,5,4,3,2);	//connected to RS,EN,D4,D5,D6,D7 of LCD display respectively
-Servo myservo;  					// create servo object to control a servo
+LiquidCrystal lcd(12,11,5,4,3,2);	// Create LCD Object to connect LCD with 12,11,5,4,3,2 pins of arduino
+Servo myservo;  			// Create servo object to control a servo
 
-#define ServoM 7        			//Connected to the servo motor.
-#define Exit 9         				//Pin connected to the EXIT sensor.
-#define In 8         				//Pin connected to the IN sensor.
-#define Pwr 6           			//Extra power pin for sensors(Don't connect servo's power to this!)
-#define Gnd 10          			//Extra groung pin for sensors(Don't connect servo's power to this!)
-#define BarLow 90      				//Low position of the barrier.
-#define BarUp 177       			//Up position of the barrier.
-#define CAPACITY 7      			//Capacity of the parking lot.
+// Below are some variables which we have define
 
+#define ServoM 7        		// Connection between 7 no. pin of arduino with servo motor.
+#define Exit 9         			// Pin 9 of arduino connected to the EXIT push button sensor sensor.
+#define In 8         			// Pin 8 connected to the IN push button sensor.
+#define Pwr 6           		// Power pin for push button sensors
+#define Gnd 10          		// Ground pin for push button sensors
+#define BarLow 0      			// Low position of the servo motor which is 0 degree out of 360.
+#define BarUp 180       		// Up position of the servo motor which is 180 degree out of 360
+#define CAPACITY 7      		// Total Capacity of the parking lot.
 
 
 void setup()
 {
-    myservo.attach(ServoM);          // attaches the servo.
-    lcd.begin(16,2);
-    lcd.print("Space left for");
-    pinMode(Gnd, OUTPUT);
-    pinMode(Pwr, OUTPUT);
-    pinMode(Exit, INPUT);            // set "EXIT" sensor pin to input
-    pinMode(In, INPUT);              // set "IN" sensor pin to input
-    digitalWrite(Gnd, LOW);
-    digitalWrite(Pwr, HIGH);
-    myservo.write(BarLow);           //Barrier in the low position
-  	//delay(1000);
+	
+    Serial.begin(9600);			// Serial monitor starts
+
+    myservo.attach(ServoM);         	// Attaches the servo motor with arduino 7 pin
+    
+    lcd.begin(16,2);			// That means LCD has 2 lines and each line have 16 characters
+    lcd.print("Space left for");	// At the begining, we have to print this- it has 14 characters
+    
+    pinMode(Gnd, OUTPUT);		// pin 10(GND) to output
+    pinMode(Pwr, OUTPUT);		// pin 6(PWR) to output
+    pinMode(Exit, INPUT);            	// set "EXIT" sensor pin to input whether the car is exit or not
+    pinMode(In, INPUT);              	// set "IN" sensor pin to input whether the car is enter or not
+    
+    digitalWrite(Gnd, LOW);		// 0 volt mean ground - write data given from the push buttons to GND
+    digitalWrite(Pwr, HIGH);		// High means - 5v - write data given from the push buttons to PWR
+    
+    myservo.write(BarLow);           	// Servo motor's rotary actuator is on 0 degree at the begining.
 }
 
-int  Available= 7;                   // Number of places available.
-
+int  Available=7;                   	// Number of places available at particular moment
 
 
 void loop()
 {
-    if (Available == 1)
+    if (Available >= 1)			// If there is only 1 place is avaliable then
     {
-        lcd.clear();
-        lcd.setCursor(1,0);
-        lcd.print("Space left for");
-        lcd.setCursor(0,1);  
-        lcd.print(Available);
+        lcd.clear();			// Clear the LCD
+        lcd.setCursor(0,0);		// setCursor(col,row)
+        lcd.print("Space left for");	// 
+        lcd.setCursor(0,1);  		// Begining in the next row
+        lcd.print(Available);		// Print available slot numbers
         lcd.print(" car");
     }
-    else
+    else				// If there is 0 - no place is avaliable then
     {
-        if (Available >= 1)
-        {
-            lcd.clear();
-            lcd.setCursor(1,0);
-            lcd.print("Space left for");
-            lcd.setCursor(0,1);  
-            lcd.print(Available);
-            lcd.print(" cars");
-        }
-        else
-        {
-            lcd.clear();
-            lcd.setCursor(1,0);
-            lcd.print("Sorry!");
-            lcd.setCursor(0,1);
-            lcd.print("No place left!");
-        }
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Sorry!");
+        lcd.setCursor(0,1);
+        lcd.print("No place left!");
     }
 
-    if(digitalRead(In)==1)
+    if(digitalRead(In)==1)		// If someone enters a car then
     {
-        if(Available != 0)
+        if(Available != 0)		// If parking slot is available then
         {
-            Available--;
-            myservo.write(BarUp);
-            delay(3000);
+            Available--;		// Driver is allowed to park and total available slot is decreased by 1
+            myservo.write(BarUp);	// Servo motor rotates with 180 degree
+            delay(2000);		// It will take time for rotating servo motor
             myservo.write(BarLow);
         }
     }
 
-    if(digitalRead(Exit)==1)
+    if(digitalRead(Exit)==1)		// If someone is exiting.
     {
-        if(Available != CAPACITY)
+        if(Available != CAPACITY)	// If available slot is not = to 7
         {
-            Available++;
-            myservo.write(BarUp);
-            delay(3000);
-            myservo.write(BarLow);
+            Available++;		// then ++1 in total availablity
+            myservo.write(BarUp);	// Rotate servo
+            delay(2000);		// Delay
+            myservo.write(BarLow);	// Low servo
         }
     }
 
+    Serial.println(Available);		// Prints total available slot on serial monitor
+	
     delay(20);
 
 }
